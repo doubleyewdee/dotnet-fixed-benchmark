@@ -29,8 +29,8 @@
             {
                 for (var i = 10; i < 1000000; i *= 10)
                 {
-                    RunBenchmark(i, random, false);
-                    RunBenchmark(i, random, true);
+                    RunBenchmark(i, false, true);
+                    RunBenchmark(i, true, true);
                 }
             }
             Console.ReadLine();
@@ -39,13 +39,13 @@
         private static void RunBenchmark(int size, bool random, bool silent)
         {
             var array = Generate(size, random);
-            BenchmarkArray(silent ? null : "inline safe " + size, array, InlineSafeSort);
-            BenchmarkArray(silent ? null : "nested safe " + size, array, NestedSafeSort);
-            BenchmarkArray(silent ? null : "inline unsafe " + size, array, InlineUnsafeSort);
-            BenchmarkArray(silent ? null : "nested unsafe " + size, array, NestedUnsafeSort);
+            BenchmarkArray(silent ? null : "inline safe", array, random, InlineSafeSort);
+            BenchmarkArray(silent ? null : "nested safe", array, random, NestedSafeSort);
+            BenchmarkArray(silent ? null : "inline unsafe", array, random, InlineUnsafeSort);
+            BenchmarkArray(silent ? null : "nested unsafe", array, random, NestedUnsafeSort);
         }
 
-        private static void BenchmarkArray(string name, int[] array, Action<int[]> runner)
+        private static void BenchmarkArray(string name, int[] array, bool random, Action<int[]> runner)
         {
             var arrayCopy = new int[array.Length];
             Buffer.BlockCopy(array, 0, arrayCopy, 0, array.Length);
@@ -59,7 +59,7 @@
 
             if (name != null)
             {
-                Console.WriteLine("{0},{1},{2}", name, array.Length, watch.ElapsedMilliseconds);
+                Console.WriteLine("{0},{1},{2},{3}", name, array.Length, random ? "random" : "inverted", watch.ElapsedMilliseconds);
             }
         }
 
