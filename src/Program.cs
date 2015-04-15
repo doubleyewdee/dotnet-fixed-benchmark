@@ -29,8 +29,8 @@
             {
                 for (var i = 10; i < 1000000; i *= 10)
                 {
-                    RunBenchmark(i, false, true);
-                    RunBenchmark(i, true, true);
+                    RunBenchmark(i, false, false);
+                    RunBenchmark(i, true, false);
                 }
             }
             Console.ReadLine();
