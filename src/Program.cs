@@ -1,10 +1,16 @@
-﻿namespace doubleyewdee
+﻿using System.IO;
+
+namespace Benchmark
 {
     using System;
     using System.Diagnostics;
 
-    public unsafe static class Benchmark
+    public static unsafe class Benchmark
     {
+        private const string OutputFilename = "results.csv";
+        private static readonly double TicksPerMicrosecond = (double)Stopwatch.Frequency/1000000;
+        private static StreamWriter outputFile = null;
+
         public static void Main(string[] args)
         {
             var random = false;
@@ -21,19 +27,22 @@
             // Do some warmup to ensure JITing occurs
             RunBenchmark(1000, false, true);
 
-            if (arraySize > 0)
+            using (outputFile = new StreamWriter(OutputFilename))
             {
-                RunBenchmark(arraySize, false, false);
-            }
-            else
-            {
-                for (var i = 10; i < 1000000; i *= 10)
+                outputFile.WriteLine("Test,Array Size,Type,Execution Time (us)");
+                if (arraySize > 0)
                 {
-                    RunBenchmark(i, false, false);
-                    RunBenchmark(i, true, false);
+                    RunBenchmark(arraySize, random, false);
+                }
+                else
+                {
+                    for (var i = 10; i < 1000000; i *= 10)
+                    {
+                        RunBenchmark(i, false, false);
+                        RunBenchmark(i, true, false);
+                    }
                 }
             }
-            Console.ReadLine();
         }
 
         private static void RunBenchmark(int size, bool random, bool silent)
@@ -59,7 +68,10 @@
 
             if (name != null)
             {
-                Console.WriteLine("{0},{1},{2},{3}", name, array.Length, random ? "random" : "inverted", watch.ElapsedMilliseconds);
+                var data = string.Format("{0},{1},{2},{3}", name, array.Length, random ? "random" : "inverted",
+                    watch.ElapsedTicks/TicksPerMicrosecond);
+                Console.WriteLine(data);
+                outputFile.WriteLine(data);
             }
         }
 
@@ -68,7 +80,7 @@
             var array = new int[size];
             var rng = new Random();
 
-            for (var i = 0;i < size; ++i)
+            for (var i = 0; i < size; ++i)
             {
                 array[i] = (random ? rng.Next(size) : size - i);
             }
@@ -78,7 +90,7 @@
 
         private static void Validate(int[] array)
         {
-            for (var i = 0;i < array.Length - 1; ++i)
+            for (var i = 0; i < array.Length - 1; ++i)
             {
                 if (array[i] > array[i + 1])
                 {
@@ -127,7 +139,7 @@
 
         private static void InlineUnsafeSort(int[] array)
         {
-            fixed (int *a = array)
+            fixed (int* a = array)
             {
                 var end = a + array.Length;
                 for (var i = a; i < end; ++i)
@@ -147,7 +159,7 @@
 
         private static void NestedUnsafeSort(int[] array)
         {
-            fixed (int *a = array)
+            fixed (int* a = array)
             {
                 var end = a + array.Length;
                 for (var i = a; i < end; ++i)
